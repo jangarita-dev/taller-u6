@@ -1,0 +1,47 @@
+# CI · compila y prueba pedidos-web en cada push y pull request.
+# Regla: ningún cambio llega a main sin pruebas.
+name: CI
+
+# 1) Disparadores: cada push y cada PR (a cualquier rama).
+on:
+  push:
+  pull_request:
+
+# 2) Permisos mínimos: el token del workflow solo puede LEER el código.
+permissions:
+  contents: read
+
+# 3) Si llega un push nuevo a la misma rama, se cancela el run anterior.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-test:
+    name: Build y test
+    # 4) Runner con versión fija (no ubuntu-latest, que cambia sin aviso).
+    runs-on: ubuntu-24.04
+    # 5) Si algo se cuelga, se corta a los 10 minutos.
+    timeout-minutes: 10
+    steps:
+      # 6) Baja el código. Sin credenciales guardadas en el runner.
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      # 7) Instala el mismo SDK de .NET que usamos en local (versión exacta).
+      - name: Instalar .NET SDK
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '10.0.403'
+
+      # 8) Restaura, compila y prueba. Si un test falla, el job queda en rojo.
+      - name: Restore
+        run: dotnet restore PedidosWeb.sln
+
+      - name: Build
+        run: dotnet build PedidosWeb.sln --no-restore --configuration Release
+
+      - name: Test
+        run: dotnet test PedidosWeb.sln --no-build --configuration Release --verbosity normal

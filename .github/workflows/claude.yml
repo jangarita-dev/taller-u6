@@ -1,0 +1,43 @@
+# Claude en CI · modo interactivo: responde a @claude en issues y pull requests.
+# Basado en el ejemplo oficial «Respond to @claude mentions» (code.claude.com/docs/en/github-actions).
+# Requiere: la Claude GitHub App instalada en el repo y el secreto CLAUDE_CODE_OAUTH_TOKEN
+# (se genera con `claude setup-token`). El token NUNCA va en este archivo.
+# Regla del curso: Claude diagnostica; tú corriges y haces merge con el CI en verde.
+name: Claude
+
+on:
+  issue_comment:
+    types: [created]
+  pull_request_review_comment:
+    types: [created]
+
+# Sin permisos por defecto; el job pide solo los que necesita.
+permissions: {}
+
+# Un solo run de Claude a la vez por issue/PR.
+concurrency:
+  group: claude-${{ github.event.issue.number || github.event.pull_request.number }}
+
+jobs:
+  claude:
+    # Solo se activa si el comentario menciona @claude.
+    if: contains(github.event.comment.body, '@claude')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write        # la action lo pide para su rama de trabajo; Edit/Write están bloqueados abajo
+      pull-requests: write   # para responder en el PR
+      issues: write          # para responder en issues
+      id-token: write        # autenticación OIDC de la GitHub App
+      actions: read          # para leer los logs del CI que falló
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+
+      - uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          additional_permissions: |
+            actions: read
+          claude_args: '--max-turns 5 --disallowedTools "Edit,Write"'
