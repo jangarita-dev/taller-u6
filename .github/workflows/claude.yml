@@ -1,0 +1,41 @@
+# Claude en CI · modo interactivo: responde a @claude en comentarios de issues y PR.
+# Basado en el ejemplo oficial «Respond to @claude mentions» de Claude Code GitHub Actions.
+# Requiere la Claude GitHub App instalada y el secreto CLAUDE_CODE_OAUTH_TOKEN
+# (generado con `claude setup-token`). El token NUNCA va escrito en este archivo.
+# Regla del taller: Claude diagnostica; la persona corrige y hace merge con el CI en verde.
+name: Claude
+
+on:
+  issue_comment:
+    types: [created]
+  pull_request_review_comment:
+    types: [created]
+
+concurrency:
+  group: claude-${{ github.event.issue.number || github.event.pull_request.number }}
+
+jobs:
+  claude:
+    # Repo público: solo el dueño puede invocar a Claude (así nadie más gasta la cuota).
+    if: >-
+      contains(github.event.comment.body, '@claude') &&
+      github.event.comment.author_association == 'OWNER'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read        # Claude no hace commits
+      pull-requests: write  # comentar en el PR
+      issues: write         # comentar en issues
+      id-token: write       # autenticación de la Claude GitHub App
+      actions: read         # leer los logs del CI para diagnosticar
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 1
+
+      - uses: anthropics/claude-code-action@4fa93a88de49bbef68b10eb15aabedf28ca0e1ed # v1.0.271
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          additional_permissions: |
+            actions: read
+          claude_args: '--max-turns 5 --disallowedTools "Edit,Write"'
