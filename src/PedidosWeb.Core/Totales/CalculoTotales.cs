@@ -65,7 +65,7 @@ public static class CalculoTotales
 
     /// <summary>Flete de la región, con 15 % de recargo en las regiones 11 y 12 (UCalculoTotales.pas:95).</summary>
     internal static decimal CalcularFlete(decimal fleteBase, int region) =>
-        region is 11 or 12 ? Calc3(fleteBase * 1.10m) : Calc3(fleteBase);
+        region is 11 or 12 ? Calc3(fleteBase * 1.15m) : Calc3(fleteBase);
 
     /// <summary>IVA sobre neto + flete (UCalculoTotales.pas:103).</summary>
     internal static decimal CalcularIva(decimal neto, decimal flete, decimal tasa) =>
