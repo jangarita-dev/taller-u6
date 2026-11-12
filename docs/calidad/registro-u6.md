@@ -22,9 +22,9 @@ Borra estos comentarios al terminar.
 
 ## Etapa 2 · Pipeline seguro
 
-- **`ci.yml`:** <enlace al primer run en verde>
-- **`claude.yml` en `main`:** <sí / no>
-- **Revisé:** permisos mínimos ☐ · timeout ☐ · versiones fijas ☐ · token solo como secreto ☐
+- **`ci.yml`:** https://github.com/jangarita-dev/taller-u6/actions/runs/43213781851 (79/79 en verde)
+- **`claude.yml` en `main`:** sí (commit 8d2fa4d). Solo responde a `@claude` del dueño del repo, porque el repo es público.
+- **Revisé:** permisos mínimos ☑ (`ci.yml`: `contents: read`) · timeout ☑ (10 min en ambos) · versiones fijas ☑ (acciones por SHA, `ubuntu-24.04`, SDK 10.0.403) · token solo como secreto ☑ (`secrets.CLAUDE_CODE_OAUTH_TOKEN`, ningún archivo lo contiene)
 
 ## Etapa 3 · La falla
 
